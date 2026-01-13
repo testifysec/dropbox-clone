@@ -7,8 +7,14 @@ spec:
   replicas: 1
   template:
     spec:
+      securityContext:
+        runAsNonRoot: false
+        runAsUser: 0
       containers:
         - name: api
+          securityContext:
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
           resources:
             requests:
               cpu: 50m
