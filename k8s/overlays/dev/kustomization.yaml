@@ -15,7 +15,7 @@ patches:
 
 images:
   - name: dropbox-clone-api
-    newName: 339150376714.dkr.ecr.us-east-1.amazonaws.com/dropbox-clone-api
+    newName: 898769392027.dkr.ecr.us-east-1.amazonaws.com/dropbox-clone-api
     newTag: dev
 
 commonLabels:

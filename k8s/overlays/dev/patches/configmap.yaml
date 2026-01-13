@@ -5,4 +5,4 @@ metadata:
   namespace: dropbox-clone
 data:
   LOG_LEVEL: "debug"
-  S3_BUCKET: "dropbox-clone-dev-files-339150376714"
+  S3_BUCKET: "dropbox-clone-dev-files-898769392027"

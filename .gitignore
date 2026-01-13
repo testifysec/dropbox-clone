@@ -43,6 +43,10 @@ terraform/environments/*/*.tfstate
 terraform/environments/*/*.tfstate.*
 terraform/environments/*/*.tfplan
 terraform/environments/*/.terraform.lock.hcl
+terraform/bootstrap/.terraform/
+terraform/bootstrap/*.tfstate
+terraform/bootstrap/*.tfstate.*
+terraform/tfplan
 
 # Kubernetes secrets (local)
 k8s/overlays/*/secrets.yaml
