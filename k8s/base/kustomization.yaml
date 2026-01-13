@@ -10,13 +10,7 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
-  - external-secret.yaml
 
 commonLabels:
   app.kubernetes.io/managed-by: kustomize
   app.kubernetes.io/part-of: dropbox-clone
-
-images:
-  - name: dropbox-clone-api
-    newName: PLACEHOLDER_ECR_URL
-    newTag: latest

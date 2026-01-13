@@ -11,12 +11,11 @@ patches:
   - path: patches/deployment.yaml
   - path: patches/serviceaccount.yaml
   - path: patches/configmap.yaml
-  - path: patches/external-secret.yaml
 
 images:
   - name: dropbox-clone-api
     newName: 898769392027.dkr.ecr.us-east-1.amazonaws.com/dropbox-clone-api
-    newTag: dev
+    newTag: latest
 
 commonLabels:
   environment: dev
