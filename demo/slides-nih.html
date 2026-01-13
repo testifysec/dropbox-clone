@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Continuous ATO - NIH Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #000066;
+            --orange: #FFA624;
+            --light-blue: #C3CEF6;
+            --text-gray: #637381;
+            --green: #00aa55;
+            --red: #dc3545;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #1a1a2e;
+            color: white;
+            overflow: hidden;
+        }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            flex-direction: column;
+            padding: 60px 80px;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            bottom: 30px;
+            right: 40px;
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .nav button {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav button:hover {
+            background: var(--orange);
+            color: var(--navy);
+            border-color: var(--orange);
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 40px;
+            left: 40px;
+            font-size: 14px;
+            opacity: 0.6;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            height: 36px;
+            filter: brightness(0) invert(1);
+        }
+
+        .partner-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* Slide 1: The Problem */
+        .slide-1 {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        .problem-hook {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .problem-hook h1 {
+            font-size: 56px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 30px;
+        }
+
+        .problem-hook h1 span {
+            color: var(--orange);
+        }
+
+        .problem-hook .subtitle {
+            font-size: 24px;
+            opacity: 0.8;
+            max-width: 800px;
+            line-height: 1.5;
+        }
+
+        .pain-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 60px;
+        }
+
+        .pain-stat {
+            background: rgba(255,166,36,0.1);
+            border-left: 4px solid var(--orange);
+            padding: 24px;
+            border-radius: 0 12px 12px 0;
+        }
+
+        .pain-stat .number {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--orange);
+        }
+
+        .pain-stat .label {
+            font-size: 15px;
+            opacity: 0.8;
+            margin-top: 8px;
+        }
+
+        /* Slide 2: The Solution */
+        .slide-2 {
+            background: linear-gradient(135deg, var(--navy) 0%, #0a0a4d 100%);
+        }
+
+        .solution-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .solution-content h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .solution-content h1 span {
+            color: var(--orange);
+        }
+
+        .solution-content .tagline {
+            font-size: 22px;
+            opacity: 0.85;
+            margin-bottom: 50px;
+            max-width: 700px;
+        }
+
+        .three-pillars {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+
+        .pillar {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s;
+        }
+
+        .pillar:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--orange);
+        }
+
+        .pillar-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--orange);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .pillar h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .pillar p {
+            font-size: 15px;
+            opacity: 0.75;
+            line-height: 1.5;
+        }
+
+        .digital-twin-note {
+            margin-top: 40px;
+            padding: 20px 28px;
+            background: rgba(0,170,85,0.15);
+            border: 1px solid rgba(0,170,85,0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .digital-twin-note .icon {
+            font-size: 28px;
+        }
+
+        .digital-twin-note .text {
+            font-size: 16px;
+        }
+
+        .digital-twin-note strong {
+            color: var(--green);
+        }
+
+        /* Slide 3: Demo Setup */
+        .slide-3 {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+        }
+
+        .demo-setup {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .demo-setup h1 {
+            font-size: 44px;
+            font-weight: 700;
+            margin-bottom: 40px;
+        }
+
+        .demo-flow {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .demo-step {
+            text-align: center;
+            position: relative;
+        }
+
+        .demo-step::after {
+            content: "";
+            position: absolute;
+            top: 28px;
+            right: -10px;
+            width: 20px;
+            height: 2px;
+            background: var(--orange);
+        }
+
+        .demo-step:last-child::after {
+            display: none;
+        }
+
+        .step-num {
+            width: 56px;
+            height: 56px;
+            background: var(--orange);
+            color: var(--navy);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 auto 16px;
+        }
+
+        .demo-step h4 {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .demo-step p {
+            font-size: 13px;
+            opacity: 0.7;
+            line-height: 1.4;
+        }
+
+        .what-youll-see {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 28px 36px;
+        }
+
+        .what-youll-see h3 {
+            font-size: 18px;
+            color: var(--orange);
+            margin-bottom: 16px;
+        }
+
+        .see-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px 40px;
+        }
+
+        .see-list li {
+            font-size: 15px;
+            opacity: 0.85;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .see-list .check {
+            color: var(--green);
+            font-weight: bold;
+        }
+
+        /* Keyboard hints */
+        .keyboard-hint {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 13px;
+            opacity: 0.4;
+        }
+
+        kbd {
+            background: rgba(255,255,255,0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin: 0 4px;
+        }
+    </style>
+</head>
+<body>
+    <!-- SLIDE 1: The Problem -->
+    <div class="slide slide-1 active" id="slide-1">
+        <div class="header">
+            <img src="https://testifysec.com/images/logo-white.svg" alt="TestifySec" class="logo" onerror="this.style.display='none'">
+            <span class="partner-badge">Internal Development Platform</span>
+        </div>
+
+        <div class="problem-hook">
+            <h1>Manual evidence recording<br><span>doesn't scale.</span></h1>
+            <p class="subtitle">
+                Your developers are screenshotting pipelines. Your compliance team is 6 months behind reality.
+                And AI is about to 10x the speed of code changes.
+            </p>
+
+            <div class="pain-stats">
+                <div class="pain-stat">
+                    <div class="number">6+ mo</div>
+                    <div class="label">Documentation lags behind actual system state</div>
+                </div>
+                <div class="pain-stat">
+                    <div class="number">10+ hrs</div>
+                    <div class="label">Per developer per week on compliance tasks</div>
+                </div>
+                <div class="pain-stat">
+                    <div class="number">2+ yrs</div>
+                    <div class="label">Average ATO timeline blocking capability delivery</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 2: The Solution -->
+    <div class="slide slide-2" id="slide-2">
+        <div class="header">
+            <img src="https://testifysec.com/images/logo-white.svg" alt="TestifySec" class="logo" onerror="this.style.display='none'">
+            <span class="partner-badge">Continuous ATO</span>
+        </div>
+
+        <div class="solution-content">
+            <h1>Evidence <span>from</span> the pipeline,<br>not <span>about</span> the pipeline.</h1>
+            <p class="tagline">
+                Cryptographically signed attestations generated automatically at build time.
+                No screenshots. No spreadsheets. No chasing engineers.
+            </p>
+
+            <div class="three-pillars">
+                <div class="pillar">
+                    <div class="pillar-icon">1</div>
+                    <h3>Pipeline Evidence Collection</h3>
+                    <p>Every build, test, and scan generates signed attestations. SAST results from Semgrep become compliance evidence automatically.</p>
+                </div>
+                <div class="pillar">
+                    <div class="pillar-icon">2</div>
+                    <h3>Continuous ATO</h3>
+                    <p>Real-time compliance status replaces point-in-time snapshots. Drift detection alerts when reality diverges from documentation.</p>
+                </div>
+                <div class="pillar">
+                    <div class="pillar-icon">3</div>
+                    <h3>Engineering + Compliance Alignment</h3>
+                    <p>Compliance self-serves evidence. Engineers ship code. Both teams see the same real-time dashboard.</p>
+                </div>
+            </div>
+
+            <div class="digital-twin-note">
+                <span class="icon">🔒</span>
+                <span class="text"><strong>Digital Twin Approach:</strong> We analyze your code and CI/CD pipelines—not your production infrastructure. No access to running systems or sensitive data.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 3: Demo Setup -->
+    <div class="slide slide-3" id="slide-3">
+        <div class="header">
+            <img src="https://testifysec.com/images/logo-white.svg" alt="TestifySec" class="logo" onerror="this.style.display='none'">
+            <span class="partner-badge">Live Demo</span>
+        </div>
+
+        <div class="demo-setup">
+            <h1>What you're about to see</h1>
+
+            <div class="demo-flow">
+                <div class="demo-step">
+                    <div class="step-num">1</div>
+                    <h4>Code Push</h4>
+                    <p>Developer commits to GitHub repo</p>
+                </div>
+                <div class="demo-step">
+                    <div class="step-num">2</div>
+                    <h4>Pipeline Runs</h4>
+                    <p>Build, test, Semgrep SAST scan</p>
+                </div>
+                <div class="demo-step">
+                    <div class="step-num">3</div>
+                    <h4>Evidence Captured</h4>
+                    <p>Witness generates signed attestations</p>
+                </div>
+                <div class="demo-step">
+                    <div class="step-num">4</div>
+                    <h4>Compliance Mapped</h4>
+                    <p>Attestations map to NIST controls</p>
+                </div>
+            </div>
+
+            <div class="what-youll-see">
+                <h3>Demo: Go Application on Internal Development Platform</h3>
+                <ul class="see-list">
+                    <li><span class="check">✓</span> GitHub Actions pipeline with Witness integration</li>
+                    <li><span class="check">✓</span> Semgrep SAST scanning with evidence capture</li>
+                    <li><span class="check">✓</span> Cryptographically signed build attestations</li>
+                    <li><span class="check">✓</span> Real-time control mapping (SA-11, CM-3, SI-7)</li>
+                    <li><span class="check">✓</span> Archivista attestation store</li>
+                    <li><span class="check">✓</span> Compliance dashboard with drift detection</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav">
+        <button onclick="prevSlide()">← Prev</button>
+        <button onclick="nextSlide()">Next →</button>
+    </div>
+
+    <div class="slide-counter">
+        <span id="current">1</span> / <span id="total">3</span>
+    </div>
+
+    <div class="keyboard-hint">
+        Press <kbd>←</kbd> <kbd>→</kbd> or <kbd>Space</kbd> to navigate
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 3;
+
+        function showSlide(n) {
+            document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+            document.getElementById(`slide-${n}`).classList.add('active');
+            document.getElementById('current').textContent = n;
+            currentSlide = n;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                showSlide(currentSlide + 1);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                showSlide(currentSlide - 1);
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+    </script>
+</body>
+</html>

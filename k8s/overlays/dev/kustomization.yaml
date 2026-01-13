@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: dropbox-clone
+
+resources:
+  - ../../base
+
+# Dev-specific patches
+patches:
+  - path: patches/deployment.yaml
+  - path: patches/serviceaccount.yaml
+  - path: patches/configmap.yaml
+  - path: patches/external-secret.yaml
+
+images:
+  - name: dropbox-clone-api
+    newName: 339150376714.dkr.ecr.us-east-1.amazonaws.com/dropbox-clone-api
+    newTag: dev
+
+commonLabels:
+  environment: dev
+
+commonAnnotations:
+  environment: dev

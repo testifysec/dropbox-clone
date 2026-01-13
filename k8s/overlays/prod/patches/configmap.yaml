@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dropbox-clone-config
+  namespace: dropbox-clone
+data:
+  LOG_LEVEL: "info"
+  S3_BUCKET: "dropbox-clone-prod-files-339150376714"

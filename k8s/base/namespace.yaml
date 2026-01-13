@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dropbox-clone
+  labels:
+    app.kubernetes.io/name: dropbox-clone
+    app.kubernetes.io/managed-by: kustomize

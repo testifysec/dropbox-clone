@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+
+# Terraform
+terraform/
+
+# Kubernetes
+k8s/
+
+# GitHub
+.github/
+
+# Documentation
+*.md
+
+# Docker
+Dockerfile
+docker-compose.yaml
+.dockerignore
+
+# Test files
+*_test.go
+
+# Binaries
+api
+
+# OS files
+.DS_Store

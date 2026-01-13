@@ -1,0 +1,60 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+api
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfplan
+terraform/.terraform.lock.hcl
+terraform/environments/*/.terraform/
+terraform/environments/*/*.tfstate
+terraform/environments/*/*.tfstate.*
+terraform/environments/*/*.tfplan
+terraform/environments/*/.terraform.lock.hcl
+
+# Kubernetes secrets (local)
+k8s/overlays/*/secrets.yaml
+
+# Log files
+*.log
+mcp-go-debugger.log
+
+# Temp files
+tmp/
+temp/
+
+# Coverage reports
+coverage.html
+coverage.txt
