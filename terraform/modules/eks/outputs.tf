@@ -19,8 +19,13 @@ output "cluster_certificate_authority_data" {
 }
 
 output "cluster_security_group_id" {
-  description = "Security group ID of the cluster"
+  description = "Security group ID of the cluster (custom)"
   value       = aws_security_group.cluster.id
+}
+
+output "eks_managed_security_group_id" {
+  description = "EKS-managed security group ID (applied to nodes)"
+  value       = aws_eks_cluster.main.vpc_config[0].cluster_security_group_id
 }
 
 output "node_role_arn" {

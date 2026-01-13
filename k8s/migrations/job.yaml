@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dropbox-clone-migration
+  namespace: dropbox-clone
+  labels:
+    app.kubernetes.io/name: dropbox-clone-migration
+    app.kubernetes.io/component: migration
+spec:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dropbox-clone-migration
+    spec:
+      serviceAccountName: dropbox-clone-api
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: dropbox-clone-api:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Running database migrations..."
+              psql "$DATABASE_URL" -f /migrations/000001_init.up.sql
+              echo "Migrations completed successfully"
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: dropbox-clone-db-credentials
+                  key: connection_string
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi

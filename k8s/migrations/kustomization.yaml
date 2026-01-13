@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# This kustomization runs database migrations as a one-time Job.
+# Usage:
+#   kubectl apply -k k8s/migrations/
+#   kubectl wait --for=condition=complete job/dropbox-clone-migration -n dropbox-clone
+#   kubectl delete -k k8s/migrations/
+
+namespace: dropbox-clone
+
+resources:
+  - job.yaml
+
+images:
+  - name: dropbox-clone-api
+    newName: 898769392027.dkr.ecr.us-east-1.amazonaws.com/dropbox-clone-api
+    newTag: latest

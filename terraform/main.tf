@@ -49,7 +49,10 @@ module "rds" {
   username                = var.database_username
   vpc_id                  = module.vpc.vpc_id
   subnet_ids              = module.vpc.private_subnet_ids
-  allowed_security_groups = [module.eks.cluster_security_group_id]
+  allowed_security_groups = [
+    module.eks.cluster_security_group_id,
+    module.eks.eks_managed_security_group_id
+  ]
 
   instance_class        = var.rds_instance_class
   allocated_storage     = var.rds_allocated_storage
@@ -101,6 +104,30 @@ module "iam" {
   eks_cluster_arn    = "arn:aws:eks:${var.aws_region}:${data.aws_caller_identity.current.account_id}:cluster/${module.eks.cluster_name}"
 
   tags = local.tags
+}
+
+# EKS Access Entry for GitHub Actions
+# This grants the GitHub Actions role access to the EKS cluster
+resource "aws_eks_access_entry" "github_actions" {
+  count = var.create_github_oidc ? 1 : 0
+
+  cluster_name  = module.eks.cluster_name
+  principal_arn = module.iam.github_actions_role_arn
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "github_actions" {
+  count = var.create_github_oidc ? 1 : 0
+
+  cluster_name  = module.eks.cluster_name
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  principal_arn = module.iam.github_actions_role_arn
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [aws_eks_access_entry.github_actions]
 }
 
 # Data sources
