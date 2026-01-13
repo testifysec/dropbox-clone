@@ -30,8 +30,11 @@ func TestLoad(t *testing.T) {
 }
 
 func TestLoadMissingRequired(t *testing.T) {
-	// t.Setenv automatically clears after test
-	// Don't set required vars to test missing validation
+	// Clear required environment variables to test missing validation
+	// t.Setenv will restore the original values after the test
+	t.Setenv("DATABASE_URL", "")
+	t.Setenv("JWT_SECRET", "")
+	t.Setenv("S3_BUCKET", "")
 
 	_, err := Load()
 	if err == nil {
