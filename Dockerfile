@@ -20,10 +20,10 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     ./cmd/api
 
 # Runtime stage
-FROM scratch
+FROM alpine:3.20
 
-# Copy CA certificates for HTTPS
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# Install CA certificates for HTTPS
+RUN apk add --no-cache ca-certificates
 
 # Copy the binary
 COPY --from=builder /app/api /api
@@ -35,4 +35,4 @@ COPY --from=builder /app/migrations /migrations
 EXPOSE 8080
 
 # Run the binary
-ENTRYPOINT ["/api"]
+CMD ["/api"]
