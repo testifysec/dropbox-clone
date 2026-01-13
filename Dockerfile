@@ -31,6 +31,12 @@ COPY --from=builder /app/api /api
 # Copy migrations
 COPY --from=builder /app/migrations /migrations
 
+# Copy static files (frontend)
+COPY --from=builder /app/static /static
+
+# Set working directory so relative paths work
+WORKDIR /
+
 # Expose port
 EXPOSE 8080
 

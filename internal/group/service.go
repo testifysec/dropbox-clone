@@ -44,8 +44,8 @@ func (s *Service) Create(ctx context.Context, input *CreateGroupInput, creatorID
 	}
 
 	if err := s.repo.AddMember(ctx, membership); err != nil {
-		// Rollback group creation on failure
-		s.repo.Delete(ctx, group.ID)
+		// Rollback group creation on failure (best effort)
+		_ = s.repo.Delete(ctx, group.ID)
 		return nil, err
 	}
 

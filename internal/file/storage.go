@@ -44,17 +44,9 @@ func NewS3Storage(ctx context.Context, cfg *S3Config) (*S3Storage, error) {
 	var err error
 
 	if cfg.Endpoint != "" {
-		// Custom endpoint (MinIO, localstack)
-		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-			return aws.Endpoint{
-				URL:               cfg.Endpoint,
-				HostnameImmutable: true,
-			}, nil
-		})
-
+		// Custom endpoint (MinIO, localstack) with static credentials
 		awsCfg, err = config.LoadDefaultConfig(ctx,
 			config.WithRegion(cfg.Region),
-			config.WithEndpointResolverWithOptions(customResolver),
 			config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
 				cfg.AccessKeyID,
 				cfg.SecretAccessKey,
@@ -72,8 +64,12 @@ func NewS3Storage(ctx context.Context, cfg *S3Config) (*S3Storage, error) {
 		return nil, fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
+	// Create S3 client with optional custom endpoint
 	client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
 		o.UsePathStyle = cfg.UsePathStyle
+		if cfg.Endpoint != "" {
+			o.BaseEndpoint = aws.String(cfg.Endpoint)
+		}
 	})
 
 	uploader := manager.NewUploader(client, func(u *manager.Uploader) {

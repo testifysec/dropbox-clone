@@ -72,8 +72,8 @@ func (s *Service) Upload(ctx context.Context, input *UploadFileInput, body io.Re
 	}
 
 	if err := s.repo.Create(ctx, file); err != nil {
-		// Try to clean up S3 file on failure
-		s.storage.Delete(ctx, s3Key)
+		// Try to clean up S3 file on failure (best effort)
+		_ = s.storage.Delete(ctx, s3Key)
 		return nil, err
 	}
 
@@ -162,7 +162,7 @@ func (s *Service) Delete(ctx context.Context, fileID, userID uuid.UUID) error {
 	}
 
 	// Delete from S3 (best effort)
-	s.storage.Delete(ctx, file.S3Key)
+	_ = s.storage.Delete(ctx, file.S3Key)
 
 	return nil
 }

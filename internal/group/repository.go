@@ -93,7 +93,7 @@ func (r *PostgresRepository) ListByUserID(ctx context.Context, userID uuid.UUID)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var groups []*Group
 	for rows.Next() {
@@ -172,7 +172,7 @@ func (r *PostgresRepository) ListMembers(ctx context.Context, groupID uuid.UUID)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var members []*Membership
 	for rows.Next() {
@@ -192,7 +192,7 @@ func (r *PostgresRepository) GetUserGroupIDs(ctx context.Context, userID uuid.UU
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var groupIDs []uuid.UUID
 	for rows.Next() {

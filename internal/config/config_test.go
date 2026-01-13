@@ -1,21 +1,15 @@
 package config
 
 import (
-	"os"
 	"testing"
 	"time"
 )
 
 func TestLoad(t *testing.T) {
 	// Set required environment variables
-	os.Setenv("DATABASE_URL", "postgres://test:test@localhost:5432/test")
-	os.Setenv("JWT_SECRET", "this-is-a-very-long-secret-key-for-testing-purposes")
-	os.Setenv("S3_BUCKET", "test-bucket")
-	defer func() {
-		os.Unsetenv("DATABASE_URL")
-		os.Unsetenv("JWT_SECRET")
-		os.Unsetenv("S3_BUCKET")
-	}()
+	t.Setenv("DATABASE_URL", "postgres://test:test@localhost:5432/test")
+	t.Setenv("JWT_SECRET", "this-is-a-very-long-secret-key-for-testing-purposes")
+	t.Setenv("S3_BUCKET", "test-bucket")
 
 	cfg, err := Load()
 	if err != nil {
@@ -36,10 +30,8 @@ func TestLoad(t *testing.T) {
 }
 
 func TestLoadMissingRequired(t *testing.T) {
-	// Clear any existing env vars
-	os.Unsetenv("DATABASE_URL")
-	os.Unsetenv("JWT_SECRET")
-	os.Unsetenv("S3_BUCKET")
+	// t.Setenv automatically clears after test
+	// Don't set required vars to test missing validation
 
 	_, err := Load()
 	if err == nil {
@@ -48,14 +40,9 @@ func TestLoadMissingRequired(t *testing.T) {
 }
 
 func TestValidateJWTSecretLength(t *testing.T) {
-	os.Setenv("DATABASE_URL", "postgres://test:test@localhost:5432/test")
-	os.Setenv("JWT_SECRET", "short") // Too short
-	os.Setenv("S3_BUCKET", "test-bucket")
-	defer func() {
-		os.Unsetenv("DATABASE_URL")
-		os.Unsetenv("JWT_SECRET")
-		os.Unsetenv("S3_BUCKET")
-	}()
+	t.Setenv("DATABASE_URL", "postgres://test:test@localhost:5432/test")
+	t.Setenv("JWT_SECRET", "short") // Too short
+	t.Setenv("S3_BUCKET", "test-bucket")
 
 	_, err := Load()
 	if err == nil {
@@ -64,16 +51,13 @@ func TestValidateJWTSecretLength(t *testing.T) {
 }
 
 func TestGetEnvDefaults(t *testing.T) {
-	os.Unsetenv("TEST_VAR")
-
-	if got := getEnv("TEST_VAR", "default"); got != "default" {
+	if got := getEnv("TEST_VAR_NONEXISTENT", "default"); got != "default" {
 		t.Errorf("expected default, got %s", got)
 	}
 }
 
 func TestGetIntEnv(t *testing.T) {
-	os.Setenv("TEST_INT", "42")
-	defer os.Unsetenv("TEST_INT")
+	t.Setenv("TEST_INT", "42")
 
 	if got := getIntEnv("TEST_INT", 0); got != 42 {
 		t.Errorf("expected 42, got %d", got)
@@ -81,8 +65,7 @@ func TestGetIntEnv(t *testing.T) {
 }
 
 func TestGetBoolEnv(t *testing.T) {
-	os.Setenv("TEST_BOOL", "true")
-	defer os.Unsetenv("TEST_BOOL")
+	t.Setenv("TEST_BOOL", "true")
 
 	if got := getBoolEnv("TEST_BOOL", false); !got {
 		t.Error("expected true")
@@ -90,8 +73,7 @@ func TestGetBoolEnv(t *testing.T) {
 }
 
 func TestGetDurationEnv(t *testing.T) {
-	os.Setenv("TEST_DURATION", "30s")
-	defer os.Unsetenv("TEST_DURATION")
+	t.Setenv("TEST_DURATION", "30s")
 
 	if got := getDurationEnv("TEST_DURATION", time.Second); got != 30*time.Second {
 		t.Errorf("expected 30s, got %v", got)
@@ -99,14 +81,9 @@ func TestGetDurationEnv(t *testing.T) {
 }
 
 func TestDefaultValues(t *testing.T) {
-	os.Setenv("DATABASE_URL", "postgres://test:test@localhost:5432/test")
-	os.Setenv("JWT_SECRET", "this-is-a-very-long-secret-key-for-testing-purposes")
-	os.Setenv("S3_BUCKET", "test-bucket")
-	defer func() {
-		os.Unsetenv("DATABASE_URL")
-		os.Unsetenv("JWT_SECRET")
-		os.Unsetenv("S3_BUCKET")
-	}()
+	t.Setenv("DATABASE_URL", "postgres://test:test@localhost:5432/test")
+	t.Setenv("JWT_SECRET", "this-is-a-very-long-secret-key-for-testing-purposes")
+	t.Setenv("S3_BUCKET", "test-bucket")
 
 	cfg, err := Load()
 	if err != nil {

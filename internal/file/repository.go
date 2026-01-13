@@ -87,7 +87,7 @@ func (r *PostgresRepository) ListByGroupID(ctx context.Context, groupID uuid.UUI
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var files []*File
 	for rows.Next() {

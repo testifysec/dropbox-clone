@@ -65,7 +65,7 @@ func (h *Handler) Upload(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "File is required", http.StatusBadRequest)
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// Get content type
 	contentType := header.Header.Get("Content-Type")
@@ -174,7 +174,7 @@ func (h *Handler) Download(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	defer body.Close()
+	defer func() { _ = body.Close() }()
 
 	// Set headers
 	w.Header().Set("Content-Type", file.ContentType)
@@ -182,7 +182,7 @@ func (h *Handler) Download(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Length", strconv.FormatInt(file.SizeBytes, 10))
 
 	// Stream the file
-	io.Copy(w, body)
+	_, _ = io.Copy(w, body)
 }
 
 // Delete handles file deletion
@@ -221,7 +221,7 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
+	_ = json.NewEncoder(w).Encode(data)
 }
 
 func respondError(w http.ResponseWriter, message string, status int) {
