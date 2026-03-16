@@ -1,0 +1,64 @@
+name: test staging cilock
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  STAGING_URL: https://platform.aws-sandbox-staging.testifysec.dev
+  CILOCK_VERSION: v1.3.1
+
+jobs:
+  cilock-action:
+    name: cilock-action test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aflock-ai/cilock-action@v1
+        with:
+          step: test-action
+          command: echo "testing cilock-action against staging"
+          attestations: environment git github
+          fulcio-url: ${{ env.STAGING_URL }}
+          archivista-server: ${{ env.STAGING_URL }}/archivista
+          timestamp-servers: ${{ env.STAGING_URL }}/api/v1/timestamp
+        env:
+          INPUT_FULCIO_USE_HTTP: "true"
+          TESTIFYSEC_API_KEY: ${{ secrets.TESTIFYSEC_STAGING_API_KEY }}
+
+  cilock-cli:
+    name: cilock CLI test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: download cilock
+        run: |
+          curl -sSL "https://github.com/aflock-ai/rookery/releases/download/${CILOCK_VERSION}/cilock-${CILOCK_VERSION}-linux-amd64.tar.gz" | tar xz
+          chmod +x cilock
+          sudo mv cilock /usr/local/bin/
+
+      - name: get oidc token
+        id: oidc
+        uses: actions/github-script@v7
+        with:
+          script: return await core.getIDToken("sigstore")
+          result-encoding: string
+
+      - name: run cilock cli
+        run: |
+          cilock run --step test-cli \
+            --signer-fulcio-url "$STAGING_URL" \
+            --signer-fulcio-use-http \
+            --signer-fulcio-token "${{ steps.oidc.outputs.result }}" \
+            --signer-fulcio-oidc-client-id sigstore \
+            --signer-fulcio-oidc-issuer https://token.actions.githubusercontent.com \
+            --timestamp-servers "$STAGING_URL/api/v1/timestamp" \
+            --enable-archivista \
+            --archivista-server "$STAGING_URL/archivista" \
+            --archivista-headers "Authorization: wit-${{ secrets.TESTIFYSEC_STAGING_API_KEY }}" \
+            -- echo "testing cilock CLI against staging"
