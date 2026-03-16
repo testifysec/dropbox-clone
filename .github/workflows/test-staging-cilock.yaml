@@ -9,7 +9,6 @@ permissions:
 
 env:
   STAGING_URL: https://platform.aws-sandbox-staging.testifysec.dev
-  CILOCK_VERSION: v1.3.1
 
 jobs:
   cilock-action:
@@ -18,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: aflock-ai/cilock-action@v1
+      - uses: aflock-ai/cilock-action@main
         with:
           step: test-action
           command: echo "testing cilock-action against staging"
@@ -38,9 +37,9 @@ jobs:
 
       - name: download cilock
         run: |
-          curl -sSL "https://github.com/aflock-ai/rookery/releases/download/${CILOCK_VERSION}/cilock-${CILOCK_VERSION}-linux-amd64.tar.gz" | tar xz
-          chmod +x cilock
-          sudo mv cilock /usr/local/bin/
+          curl -sSL "https://github.com/aflock-ai/rookery/releases/download/v0.0.1-test/cilock-v0.0.1-test-linux-amd64.tar.gz" | tar xz
+          chmod +x cilock-linux-amd64
+          sudo mv cilock-linux-amd64 /usr/local/bin/cilock
 
       - name: get oidc token
         id: oidc
