@@ -161,4 +161,6 @@ jobs:
             --enable-archivista \
             --archivista-server "$STAGING_URL/archivista" \
             --archivista-headers "Authorization: ${{ secrets.TESTIFYSEC_STAGING_API_KEY }}" \
-            -- docker build -t dropbox-clone:test .
+              -a docker \
+            --attestor-product-include-glob "docker-metadata.json" \
+            -- docker buildx build --metadata-file docker-metadata.json -t dropbox-clone:test --load .
