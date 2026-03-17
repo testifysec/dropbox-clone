@@ -22,11 +22,16 @@ jobs:
         with:
           go-version: "1.24"
 
-      - name: download cilock
+      - name: install tools
         run: |
+          # cilock
           curl -sSL "https://github.com/aflock-ai/rookery/releases/download/v0.0.1-test/cilock-v0.0.1-test-linux-amd64.tar.gz" | tar xz
           chmod +x cilock-linux-amd64
           sudo mv cilock-linux-amd64 /usr/local/bin/cilock
+          # syft for SBOM generation
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          # gosec for SARIF output
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
 
       - name: get oidc token
         id: oidc
@@ -54,6 +59,34 @@ jobs:
             --archivista-headers "Authorization: ${{ secrets.TESTIFYSEC_STAGING_API_KEY }}" \
             -- echo "lint passed"
 
+      - name: refresh oidc token for sast
+        id: oidc_sast
+        uses: actions/github-script@v7
+        with:
+          script: return await core.getIDToken("sigstore")
+          result-encoding: string
+
+      # Step 2: SAST scan producing SARIF
+      - name: sast-scan
+        run: |
+          # Run gosec, output SARIF (allow non-zero exit — findings are expected)
+          gosec -fmt sarif -out gosec-results.sarif ./... || true
+          cilock run --step sast-scan \
+            -a environment \
+            -a git \
+            -a github \
+            -a sarif \
+            --signer-fulcio-url "$STAGING_URL" \
+            --signer-fulcio-use-http \
+            --signer-fulcio-token "${{ steps.oidc_sast.outputs.result }}" \
+            --signer-fulcio-oidc-client-id sigstore \
+            --signer-fulcio-oidc-issuer https://token.actions.githubusercontent.com \
+            --timestamp-servers "$STAGING_URL/api/v1/timestamp" \
+            --enable-archivista \
+            --archivista-server "$STAGING_URL/archivista" \
+            --archivista-headers "Authorization: ${{ secrets.TESTIFYSEC_STAGING_API_KEY }}" \
+            -- echo "sast scan complete"
+
       - name: refresh oidc token for test
         id: oidc_test
         uses: actions/github-script@v7
@@ -61,7 +94,7 @@ jobs:
           script: return await core.getIDToken("sigstore")
           result-encoding: string
 
-      # Step 2: Test
+      # Step 3: Test
       - name: test
         run: |
           cilock run --step test \
@@ -86,9 +119,11 @@ jobs:
           script: return await core.getIDToken("sigstore")
           result-encoding: string
 
-      # Step 3: Build binary with SBOM + product attestation
+      # Step 4: Build binary + generate SBOM with syft
       - name: build
         run: |
+          CGO_ENABLED=0 go build -o bin/dropbox-clone ./cmd/api
+          syft bin/dropbox-clone -o cyclonedx-json=sbom.cdx.json
           cilock run --step build \
             -a environment \
             -a git \
@@ -104,7 +139,7 @@ jobs:
             --enable-archivista \
             --archivista-server "$STAGING_URL/archivista" \
             --archivista-headers "Authorization: ${{ secrets.TESTIFYSEC_STAGING_API_KEY }}" \
-            -- bash -c "CGO_ENABLED=0 go build -o bin/dropbox-clone ./cmd/api"
+            -- echo "build complete"
 
       - name: refresh oidc token for docker
         id: oidc_docker
@@ -113,7 +148,7 @@ jobs:
           script: return await core.getIDToken("sigstore")
           result-encoding: string
 
-      # Step 4: Docker build with container attestation
+      # Step 5: Docker build with container attestation
       - name: docker-build
         run: |
           cilock run --step docker-build \
