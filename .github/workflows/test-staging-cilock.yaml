@@ -126,7 +126,7 @@ jobs:
             -a git \
             -a github \
             -a sbom \
-            --attestor-product-include-glob "bin/*,*.cdx.json" \
+            --attestor-product-include-glob "bin/*" \
             --signer-fulcio-url "$STAGING_URL" \
             --signer-fulcio-use-http \
             --signer-fulcio-token "${{ steps.oidc_build.outputs.result }}" \
@@ -136,7 +136,7 @@ jobs:
             --enable-archivista \
             --archivista-server "$STAGING_URL/archivista" \
             --archivista-headers "Authorization: ${{ secrets.TESTIFYSEC_STAGING_API_KEY }}" \
-            -- bash -c "CGO_ENABLED=0 go build -o bin/dropbox-clone ./cmd/api && syft bin/dropbox-clone -o cyclonedx-json=bom.cdx.json"
+            -- bash -c "CGO_ENABLED=0 go build -o bin/dropbox-clone ./cmd/api && syft bin/dropbox-clone -o cyclonedx-json=bin/bom.cdx.json"
 
       - name: refresh oidc token for docker
         id: oidc_docker
