@@ -66,16 +66,15 @@ jobs:
           script: return await core.getIDToken("sigstore")
           result-encoding: string
 
-      # Step 2: SAST scan producing SARIF
+      # Step 2: SAST scan producing SARIF — run gosec INSIDE cilock so the sarif file is a product
       - name: sast
         run: |
-          # Generate SARIF report (gosec returns non-zero on findings, || true to continue)
-          gosec -fmt=sarif -out=gosec-results.sarif ./... || true
           cilock run --step sast \
             -a environment \
             -a git \
             -a github \
             -a sarif \
+            --attestor-product-include-glob "*.sarif" \
             --signer-fulcio-url "$STAGING_URL" \
             --signer-fulcio-use-http \
             --signer-fulcio-token "${{ steps.oidc_sast.outputs.result }}" \
@@ -85,7 +84,7 @@ jobs:
             --enable-archivista \
             --archivista-server "$STAGING_URL/archivista" \
             --archivista-headers "Authorization: ${{ secrets.TESTIFYSEC_STAGING_API_KEY }}" \
-            -- echo "sast scan complete"
+            -- bash -c "gosec -fmt=sarif -out=gosec-results.sarif ./... || true"
 
       - name: refresh oidc token for test
         id: oidc_test
@@ -119,11 +118,9 @@ jobs:
           script: return await core.getIDToken("sigstore")
           result-encoding: string
 
-      # Step 4: Build binary + SBOM
+      # Step 4: Build binary + generate SBOM with syft, then attest both
       - name: build
         run: |
-          CGO_ENABLED=0 go build -o bin/dropbox-clone ./cmd/api
-          syft bin/dropbox-clone -o cyclonedx-json=sbom.cdx.json
           cilock run --step build \
             -a environment \
             -a git \
@@ -139,7 +136,7 @@ jobs:
             --enable-archivista \
             --archivista-server "$STAGING_URL/archivista" \
             --archivista-headers "Authorization: ${{ secrets.TESTIFYSEC_STAGING_API_KEY }}" \
-            -- echo "build complete"
+            -- bash -c "CGO_ENABLED=0 go build -o bin/dropbox-clone ./cmd/api && syft bin/dropbox-clone -o cyclonedx-json=bom.cdx.json"
 
       - name: refresh oidc token for docker
         id: oidc_docker
