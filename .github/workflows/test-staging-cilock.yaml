@@ -66,7 +66,7 @@ jobs:
           script: return await core.getIDToken("sigstore")
           result-encoding: string
 
-      # Step 2: SAST scan producing SARIF — run gosec INSIDE cilock so the sarif file is a product
+      # Step 2: SAST scan — gosec runs inside cilock, sarif file captured as product
       - name: sast
         run: |
           cilock run --step sast \
@@ -118,7 +118,7 @@ jobs:
           script: return await core.getIDToken("sigstore")
           result-encoding: string
 
-      # Step 4: Build binary + generate SBOM with syft, then attest both
+      # Step 4: Build + SBOM — build binary and generate SBOM inside cilock
       - name: build
         run: |
           cilock run --step build \
@@ -126,7 +126,7 @@ jobs:
             -a git \
             -a github \
             -a sbom \
-            --attestor-product-include-glob "bin/*" \
+            --attestor-product-include-glob "bin/*,*.cdx.json" \
             --signer-fulcio-url "$STAGING_URL" \
             --signer-fulcio-use-http \
             --signer-fulcio-token "${{ steps.oidc_build.outputs.result }}" \
