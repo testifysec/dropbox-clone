@@ -51,7 +51,9 @@ jobs:
       - name: run cilock cli
         run: |
           cilock run --step test-cli \
-            --attestations "environment git github" \
+            -a environment \
+            -a git \
+            -a github \
             --signer-fulcio-url "$STAGING_URL" \
             --signer-fulcio-use-http \
             --signer-fulcio-token "${{ steps.oidc.outputs.result }}" \
