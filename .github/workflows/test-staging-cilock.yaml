@@ -152,7 +152,7 @@ jobs:
             -a environment \
             -a git \
             -a github \
-            -a docker \
+            -a oci \
             --signer-fulcio-url "$STAGING_URL" \
             --signer-fulcio-use-http \
             --signer-fulcio-token "${{ steps.oidc_docker.outputs.result }}" \
