@@ -11,29 +11,16 @@ env:
   STAGING_URL: https://platform.aws-sandbox-staging.testifysec.dev
 
 jobs:
-  # cilock-action job disabled until aflock-ai/cilock-action has node_modules built
-  # cilock-action:
-  #   name: cilock-action test
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: aflock-ai/cilock-action@main
-  #       with:
-  #         step: test-action
-  #         command: echo "testing cilock-action against staging"
-  #         attestations: environment git github
-  #         fulcio-url: ${{ env.STAGING_URL }}
-  #         archivista-server: ${{ env.STAGING_URL }}/archivista
-  #         timestamp-servers: ${{ env.STAGING_URL }}/api/v1/timestamp
-  #       env:
-  #         INPUT_FULCIO_USE_HTTP: "true"
-  #         TESTIFYSEC_API_KEY: ${{ secrets.TESTIFYSEC_STAGING_API_KEY }}
-
   cilock-cli:
-    name: cilock CLI test
+    name: Attested CI Pipeline
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
 
       - name: download cilock
         run: |
@@ -48,12 +35,14 @@ jobs:
           script: return await core.getIDToken("sigstore")
           result-encoding: string
 
-      - name: run cilock cli
+      # Step 1: Lint with secret scanning
+      - name: lint
         run: |
-          cilock run --step test-cli \
+          cilock run --step lint \
             -a environment \
             -a git \
             -a github \
+            -a secretscan \
             --signer-fulcio-url "$STAGING_URL" \
             --signer-fulcio-use-http \
             --signer-fulcio-token "${{ steps.oidc.outputs.result }}" \
@@ -63,4 +52,83 @@ jobs:
             --enable-archivista \
             --archivista-server "$STAGING_URL/archivista" \
             --archivista-headers "Authorization: ${{ secrets.TESTIFYSEC_STAGING_API_KEY }}" \
-            -- echo "testing cilock CLI against staging"
+            -- echo "lint passed"
+
+      - name: refresh oidc token for test
+        id: oidc_test
+        uses: actions/github-script@v7
+        with:
+          script: return await core.getIDToken("sigstore")
+          result-encoding: string
+
+      # Step 2: Test with SBOM generation
+      - name: test
+        run: |
+          cilock run --step test \
+            -a environment \
+            -a git \
+            -a github \
+            -a sbom \
+            --signer-fulcio-url "$STAGING_URL" \
+            --signer-fulcio-use-http \
+            --signer-fulcio-token "${{ steps.oidc_test.outputs.result }}" \
+            --signer-fulcio-oidc-client-id sigstore \
+            --signer-fulcio-oidc-issuer https://token.actions.githubusercontent.com \
+            --timestamp-servers "$STAGING_URL/api/v1/timestamp" \
+            --enable-archivista \
+            --archivista-server "$STAGING_URL/archivista" \
+            --archivista-headers "Authorization: ${{ secrets.TESTIFYSEC_STAGING_API_KEY }}" \
+            -- go test -count=1 ./...
+
+      - name: refresh oidc token for build
+        id: oidc_build
+        uses: actions/github-script@v7
+        with:
+          script: return await core.getIDToken("sigstore")
+          result-encoding: string
+
+      # Step 3: Build binary with product attestation
+      - name: build
+        run: |
+          cilock run --step build \
+            -a environment \
+            -a git \
+            -a github \
+            -a sbom \
+            --attestor-product-include-glob "bin/*" \
+            --signer-fulcio-url "$STAGING_URL" \
+            --signer-fulcio-use-http \
+            --signer-fulcio-token "${{ steps.oidc_build.outputs.result }}" \
+            --signer-fulcio-oidc-client-id sigstore \
+            --signer-fulcio-oidc-issuer https://token.actions.githubusercontent.com \
+            --timestamp-servers "$STAGING_URL/api/v1/timestamp" \
+            --enable-archivista \
+            --archivista-server "$STAGING_URL/archivista" \
+            --archivista-headers "Authorization: ${{ secrets.TESTIFYSEC_STAGING_API_KEY }}" \
+            -- bash -c "CGO_ENABLED=0 go build -o bin/dropbox-clone ./cmd/api"
+
+      - name: refresh oidc token for docker
+        id: oidc_docker
+        uses: actions/github-script@v7
+        with:
+          script: return await core.getIDToken("sigstore")
+          result-encoding: string
+
+      # Step 4: Docker build with container attestation
+      - name: docker-build
+        run: |
+          cilock run --step docker-build \
+            -a environment \
+            -a git \
+            -a github \
+            -a docker \
+            --signer-fulcio-url "$STAGING_URL" \
+            --signer-fulcio-use-http \
+            --signer-fulcio-token "${{ steps.oidc_docker.outputs.result }}" \
+            --signer-fulcio-oidc-client-id sigstore \
+            --signer-fulcio-oidc-issuer https://token.actions.githubusercontent.com \
+            --timestamp-servers "$STAGING_URL/api/v1/timestamp" \
+            --enable-archivista \
+            --archivista-server "$STAGING_URL/archivista" \
+            --archivista-headers "Authorization: ${{ secrets.TESTIFYSEC_STAGING_API_KEY }}" \
+            -- docker build -t dropbox-clone:test .
