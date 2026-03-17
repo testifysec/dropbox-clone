@@ -61,14 +61,13 @@ jobs:
           script: return await core.getIDToken("sigstore")
           result-encoding: string
 
-      # Step 2: Test with SBOM generation
+      # Step 2: Test
       - name: test
         run: |
           cilock run --step test \
             -a environment \
             -a git \
             -a github \
-            -a sbom \
             --signer-fulcio-url "$STAGING_URL" \
             --signer-fulcio-use-http \
             --signer-fulcio-token "${{ steps.oidc_test.outputs.result }}" \
@@ -87,7 +86,7 @@ jobs:
           script: return await core.getIDToken("sigstore")
           result-encoding: string
 
-      # Step 3: Build binary with product attestation
+      # Step 3: Build binary with SBOM + product attestation
       - name: build
         run: |
           cilock run --step build \
