@@ -37,7 +37,7 @@ jobs:
         run: go install github.com/securego/gosec/v2/cmd/gosec@latest
 
       - name: lint + secrets
-        uses: aflock-ai/cilock-action@v1.0.0
+        uses: aflock-ai/cilock-action@v1.0.1
         with:
           step: lint
           command: echo "lint passed"
@@ -45,7 +45,7 @@ jobs:
           platform-url: ${{ env.STAGING_URL }}
 
       - name: sast
-        uses: aflock-ai/cilock-action@v1.0.0
+        uses: aflock-ai/cilock-action@v1.0.1
         with:
           step: sast
           command: bash -c "gosec -fmt=sarif -out=gosec-results.sarif ./... || true"
@@ -54,7 +54,7 @@ jobs:
           cilock-args: --attestor-product-include-glob "*.sarif"
 
       - name: test
-        uses: aflock-ai/cilock-action@v1.0.0
+        uses: aflock-ai/cilock-action@v1.0.1
         with:
           step: test
           command: go test -count=1 ./...
@@ -62,7 +62,7 @@ jobs:
           platform-url: ${{ env.STAGING_URL }}
 
       - name: build + sbom
-        uses: aflock-ai/cilock-action@v1.0.0
+        uses: aflock-ai/cilock-action@v1.0.1
         with:
           step: build
           command: bash -c "CGO_ENABLED=0 go build -o bin/dropbox-clone ./cmd/api && syft bin/dropbox-clone -o cyclonedx-json=bin/bom.cdx.json"
@@ -71,7 +71,7 @@ jobs:
           cilock-args: --attestor-product-include-glob "bin/*"
 
       - name: docker-build
-        uses: aflock-ai/cilock-action@v1.0.0
+        uses: aflock-ai/cilock-action@v1.0.1
         with:
           step: docker-build
           command: docker buildx build --metadata-file docker-metadata.json -t dropbox-clone:test --load .
